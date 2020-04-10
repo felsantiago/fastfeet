@@ -16,6 +16,15 @@ class App {
     this.routes();
   }
 
+  middlewares() {
+    this.app.use(cors());
+    this.app.use(express.json());
+    this.app.use(
+      '/files',
+      express.static(path.resolve(__dirname, '..', 'tmp', 'uploads'))
+    );
+  }
+
   routes() {
     this.app.use(routes);
   }
