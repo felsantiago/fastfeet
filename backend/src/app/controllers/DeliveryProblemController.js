@@ -2,6 +2,9 @@ import DeliveryProblem from '../models/DeliveryProblem';
 import Delivery from '../models/Delivery';
 import Deliveryman from '../models/Deliveryman';
 
+import CancellationMail from '../jobs/CancellationMail';
+import Queue from '../../lib/Queue';
+
 class DeliveryProblemController {
   async store(req, res) {
     const { id } = req.params;
@@ -101,7 +104,12 @@ class DeliveryProblemController {
       },
     });
 
-    // enviar por email problems
+    if (process.env.NODE_ENV !== 'test') {
+      await Queue.add(CancellationMail.key, {
+        delivery,
+        problem: problems,
+      });
+    }
 
     return res.json(delivery);
   }

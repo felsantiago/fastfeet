@@ -10,6 +10,7 @@ import DeliverymanController from './app/controllers/DeliverymanController';
 import DeliveryController from './app/controllers/DeliveryController';
 import StatusController from './app/controllers/StatusController';
 import DeliveryProblemsCtrller from './app/controllers/DeliveryProblemController';
+import NotificationController from './app/controllers/NotificationController';
 
 import validateDeliveryStore from './app/validators/delivery/DeliveryStore';
 import validateDeliveryUpdate from './app/validators/delivery/DeliveryUpdate';
@@ -30,26 +31,16 @@ import authMiddleware from './app/middlewares/auth';
 const routes = new Router();
 const upload = multer(multerConfig);
 
-routes.post('/users', validateUserStore, UserController.store);
 routes.post('/sessions', validateUserStore, SessionController.store);
 
-routes.get('/deliveryman/:id/deliveries', StatusController.index);
-routes.put(
-  '/deliveryman/:id/deliveries/:deliveryId',
-  validateStatusUpdate,
-  StatusController.update
-);
+routes.use(authMiddleware);
 
-routes.post(
-  '/delivery/:id/problems',
-  validateProblemStore,
-  DeliveryProblemsCtrller.store
-);
-routes.get('/delivery/:id/problems', DeliveryProblemsCtrller.show);
+routes.post('/users', validateUserStore, UserController.store);
 
 routes.post('/files', upload.single('file'), FileController.store);
 
-routes.use(authMiddleware);
+routes.get('/notifications', NotificationController.index);
+routes.put('/notifications/:id', NotificationController.update);
 
 routes.get('/delivery/problems', DeliveryProblemsCtrller.index);
 routes.delete(
@@ -72,6 +63,12 @@ routes.delete(
   RecipientController.delete
 );
 
+routes.get('/deliveryman/:id/deliveries', StatusController.index);
+routes.put(
+  '/deliveryman/:id/deliveries/:deliveryId',
+  validateStatusUpdate,
+  StatusController.update
+);
 routes.post('/deliveryman', validateDManStore, DeliverymanController.store);
 routes.get('/deliveryman', DeliverymanController.index);
 routes.get('/deliveryman/:id', DeliverymanController.show);
@@ -95,5 +92,12 @@ routes.delete(
   validateDeliveryDelete,
   DeliveryController.delete
 );
+
+routes.post(
+  '/delivery/:id/problems',
+  validateProblemStore,
+  DeliveryProblemsCtrller.store
+);
+routes.get('/delivery/:id/problems', DeliveryProblemsCtrller.show);
 
 export default routes;

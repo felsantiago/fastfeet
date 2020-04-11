@@ -5,6 +5,9 @@ import Recipient from '../models/Recipient';
 import Deliveryman from '../models/Deliveryman';
 import File from '../models/File';
 
+import DetailsMail from '../jobs/DetailsMail';
+import Queue from '../../lib/Queue';
+
 class DeliveryController {
   async store(req, res) {
     const { deliveryman_id, recipient_id } = req.body;
@@ -26,6 +29,13 @@ class DeliveryController {
     }
 
     const delivery = await Delivery.create(req.body);
+
+    if (process.env.NODE_ENV !== 'test') {
+      await Queue.add(DetailsMail.key, {
+        recipient: recipientExists,
+        deliveryman: deliverymanExists,
+      });
+    }
 
     return res.json(delivery);
   }
