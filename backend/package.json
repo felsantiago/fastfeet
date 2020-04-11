@@ -5,11 +5,13 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "dev:debug": "nodemon --inspect src/server.js"
+    "dev:debug": "nodemon --inspect src/server.js",
+    "queue": "nodemon src/queue.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sentry/node": "^5.15.4",
     "bcryptjs": "^2.4.3",
     "bee-queue": "^1.2.3",
     "cors": "^2.8.5",
@@ -26,6 +28,7 @@
     "pg-hstore": "^2.3.3",
     "sequelize": "^5.21.6",
     "sqlite3": "^4.1.1",
+    "youch": "^2.0.10",
     "yup": "^0.28.3"
   },
   "devDependencies": {
