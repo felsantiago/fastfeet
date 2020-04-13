@@ -13,7 +13,7 @@ import './database';
 
 class App {
   constructor() {
-    this.app = express();
+    this.server = express();
 
     Sentry.init(sentryConfig);
 
@@ -23,16 +23,16 @@ class App {
 
   middlewares() {
     this.server.use(Sentry.Handlers.requestHandler());
-    this.app.use(cors());
-    this.app.use(express.json());
-    this.app.use(
+    this.server.use(cors());
+    this.server.use(express.json());
+    this.server.use(
       '/files',
       express.static(path.resolve(__dirname, '..', 'tmp', 'uploads'))
     );
   }
 
   routes() {
-    this.app.use(routes);
+    this.server.use(routes);
     this.server.use(Sentry.Handlers.errorHandler());
   }
 
@@ -49,4 +49,4 @@ class App {
   }
 }
 
-export default new App().app;
+export default new App().server;

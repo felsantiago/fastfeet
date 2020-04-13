@@ -1,35 +1,32 @@
-import Notification from '../schemas/Notification';
-import User from '../models/User';
+import NotificationService from '../services/NotificationService';
+
+const ERRO_INESPERADO = 'Erro inesperado.';
 
 class NotificationController {
   async index(req, res) {
-    const checkIsProvider = await User.findOne({
-      where: { id: req.userId, provider: true },
-    });
+    try {
+      const id = req.userId;
+      const notifications = await NotificationService.index(id);
 
-    if (!checkIsProvider) {
-      return res
-        .status(401)
-        .json({ error: 'Only provider can load notifications' });
+      return res.json(notifications);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    const notifications = await Notification.find({
-      user: req.userId,
-    })
-      .sort({ createdAt: 'desc' })
-      .limit(20);
-
-    return res.json(notifications);
   }
 
   async update(req, res) {
-    const notification = await Notification.findByIdAndUpdate(
-      req.params.id,
-      { read: true },
-      { new: true }
-    );
+    try {
+      const { id } = req.params;
+      const notification = await NotificationService.update(id);
 
-    return res.json(notification);
+      return res.json(notification);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
+    }
   }
 }
 

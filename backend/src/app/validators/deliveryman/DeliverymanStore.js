@@ -4,9 +4,7 @@ export default async (req, res, next) => {
   try {
     const schema = object().shape({
       name: string().required(),
-      email: string()
-        .email()
-        .required(),
+      email: string().email().required(),
       avatar_id: number(),
     });
     await schema.validate(req.body, { abortEarly: false });

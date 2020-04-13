@@ -24,7 +24,11 @@ class Queue {
   }
 
   add(queue, job) {
-    return this.queues[queue].bee.createJob(job).save();
+    if (process.env.NODE_ENV !== 'test') {
+      return this.queues[queue].bee.createJob(job).save();
+    }
+
+    return null;
   }
 
   processQueue() {

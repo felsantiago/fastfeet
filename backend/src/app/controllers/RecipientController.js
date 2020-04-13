@@ -1,125 +1,93 @@
-import { Op } from 'sequelize';
+import RecipientService from '../services/RecipientService';
 
-import Recipient from '../models/Recipient';
+const ERRO_INESPERADO = 'Erro inesperado.';
 
 class RecipientController {
   async store(req, res) {
-    const { name, street, number, zip_code } = req.body;
+    try {
+      const { name, zip_code } = req.body;
 
-    const recipientExists = await Recipient.findOne({
-      where: { name, street, number, zip_code },
-    });
+      const {
+        id,
+        address_details,
+        number: addressNumber,
+        state,
+        city,
+      } = await RecipientService.store({ data: req.body });
 
-    if (recipientExists)
-      return res.status(401).json({ error: 'Recipient already exists.' });
+      return res.json({
+        id,
+        name,
+        addressNumber,
+        address_details,
+        state,
+        city,
+        zip_code,
+      });
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
 
-    const {
-      id,
-      address_details,
-      number: addressNumber,
-      state,
-      city,
-    } = await Recipient.create(req.body);
-
-    return res.json({
-      id,
-      name,
-      addressNumber,
-      address_details,
-      state,
-      city,
-      zip_code,
-    });
+      return res.status(500).json({ erro: ERRO_INESPERADO });
+    }
   }
 
   async index(req, res) {
-    const { page, name } = req.query;
+    try {
+      const { page, name } = req.query;
+      const { recipients, count } = await RecipientService.index(name, page);
 
-    if (name || page) {
-      if (!page) {
-        const recipients = await Recipient.findAll({
-          where: {
-            name: {
-              [Op.iLike]: `%${name}%`,
-            },
-          },
-          order: ['id'],
-        });
+      res.header('X-Total-Count', count);
 
-        return res.json(recipients);
-      }
+      return res.json(recipients);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
 
-      const { count, rows: recipients } = await Recipient.findAndCountAll({
-        where: {
-          name: {
-            [Op.iLike]: `%${name}%`,
-          },
-        },
-        order: ['id'],
-        limit: 7,
-        offset: (page - 1) * 7,
-      });
-
-      return res.json({ recipients, count });
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    const recipients = await Recipient.findAll({
-      order: ['id'],
-    });
-
-    return res.json(recipients);
-  }
-
-  async show(req, res) {
-    const { id } = req.params;
-
-    const recipient = await Recipient.findByPk(id);
-
-    return res.json(recipient);
   }
 
   async update(req, res) {
-    const { id } = req.params;
-    const { name } = req.body;
+    try {
+      const { id } = req.params;
+      const { name } = req.body;
 
-    const recipient = await Recipient.findByPk(id);
+      const {
+        number: addressNumber,
+        street,
+        address_details,
+        state,
+        city,
+        zip_code,
+      } = await RecipientService.update({ id, data: req.body });
 
-    if (!recipient) {
-      return res.status(401).json({ error: 'Recipient not found' });
+      return res.json({
+        name,
+        addressNumber,
+        street,
+        address_details,
+        state,
+        city,
+        zip_code,
+      });
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    const {
-      number: addressNumber,
-      street,
-      address_details,
-      state,
-      city,
-      zip_code,
-    } = await recipient.update(req.body);
-
-    return res.json({
-      name,
-      addressNumber,
-      street,
-      address_details,
-      state,
-      city,
-      zip_code,
-    });
   }
 
   async delete(req, res) {
-    const { id } = req.params;
+    try {
+      const { id } = req.params;
 
-    const recipient = await Recipient.findByPk(id);
+      await RecipientService.delete(id);
 
-    if (!recipient) {
-      return res.status(401).json({ error: 'Recipient not found.' });
+      return res.status(204).send();
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    await recipient.destroy();
-
-    return res.status(204).send();
   }
 }
 

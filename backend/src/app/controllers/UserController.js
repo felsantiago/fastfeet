@@ -1,19 +1,22 @@
-import User from '../models/User';
+import UserService from '../services/UserService';
+
+const ERRO_INESPERADO = 'Erro inesperado.';
 
 class UserController {
   async store(req, res) {
-    const userExists = await User.findOne({ where: { email: req.body.email } });
+    try {
+      const { id, name, email } = await UserService.store({ data: req.body });
 
-    if (userExists)
-      return res.status(400).json({ error: 'User already exists.' });
+      return res.json({
+        id,
+        name,
+        email,
+      });
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
 
-    const { id, name, email } = await User.create(req.body);
-
-    return res.json({
-      id,
-      name,
-      email,
-    });
+      return res.status(500).json({ erro: ERRO_INESPERADO });
+    }
   }
 }
 

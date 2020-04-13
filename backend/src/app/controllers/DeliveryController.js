@@ -1,208 +1,65 @@
-import { Op } from 'sequelize';
+import DeliveryService from '../services/DeliveryService';
 
-import Delivery from '../models/Delivery';
-import Recipient from '../models/Recipient';
-import Deliveryman from '../models/Deliveryman';
-import File from '../models/File';
-
-import DetailsMail from '../jobs/DetailsMail';
-import Queue from '../../lib/Queue';
+const ERRO_INESPERADO = 'Erro inesperado.';
 
 class DeliveryController {
   async store(req, res) {
-    const { deliveryman_id, recipient_id } = req.body;
+    try {
+      const delivery = await DeliveryService.store({ data: req.body });
 
-    const deliverymanExists = await Deliveryman.findOne({
-      where: { id: deliveryman_id },
-    });
+      return res.json(delivery);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
 
-    if (!deliverymanExists) {
-      return res.status(401).json({ error: 'Deliveryman not found.' });
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    const recipientExists = await Recipient.findOne({
-      where: { id: recipient_id },
-    });
-
-    if (!recipientExists) {
-      return res.status(401).json({ error: 'Recipient not found.' });
-    }
-
-    const delivery = await Delivery.create(req.body);
-
-    if (process.env.NODE_ENV !== 'test') {
-      await Queue.add(DetailsMail.key, {
-        recipient: recipientExists,
-        deliveryman: deliverymanExists,
-      });
-    }
-
-    return res.json(delivery);
   }
 
   async index(req, res) {
-    const { page, q } = req.query;
+    try {
+      const { page, name } = req.query;
 
-    if (q || page) {
-      const { count, rows: deliveries } = await Delivery.findAndCountAll({
-        where: {
-          product: {
-            [Op.iLike]: `%${q}%`,
-          },
-        },
-        order: ['id'],
-        limit: 7,
-        offset: (page - 1) * 7,
-        include: [
-          {
-            model: Deliveryman,
-            as: 'deliveryman',
-            attributes: ['id', 'name', 'email', 'avatar_id'],
-            include: {
-              model: File,
-              as: 'avatar',
-              attributes: ['name', 'path', 'url'],
-            },
-          },
-          {
-            model: Recipient,
-            as: 'recipient',
-            attributes: [
-              'id',
-              'name',
-              'street',
-              'number',
-              'address_details',
-              'state',
-              'city',
-              'zip_code',
-            ],
-          },
-          {
-            model: File,
-            as: 'signature',
-            attributes: ['url', 'path', 'name'],
-          },
-        ],
-      });
+      const { deliveries, count } = await DeliveryService.index(name, page);
 
-      return res.json({ deliveries, count });
+      res.header('X-Total-Count', count);
+
+      return res.json(deliveries);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    const deliveries = await Delivery.findAll({
-      order: ['id'],
-      include: [
-        {
-          model: Deliveryman,
-          as: 'deliveryman',
-          attributes: ['id', 'name', 'email', 'avatar_id'],
-          include: {
-            model: File,
-            as: 'avatar',
-            attributes: ['name', 'path', 'url'],
-          },
-        },
-        {
-          model: Recipient,
-          as: 'recipient',
-          attributes: [
-            'id',
-            'name',
-            'street',
-            'number',
-            'address_details',
-            'state',
-            'city',
-            'zip_code',
-          ],
-        },
-        {
-          model: File,
-          as: 'signature',
-          attributes: ['url', 'path', 'name'],
-        },
-      ],
-    });
-
-    return res.json(deliveries);
-  }
-
-  async show(req, res) {
-    const { id } = req.params;
-
-    const delivery = await Delivery.findByPk(id, {
-      include: [
-        {
-          model: Deliveryman,
-          as: 'deliveryman',
-          attributes: ['id', 'name'],
-        },
-        {
-          model: Recipient,
-          as: 'recipient',
-          attributes: ['id', 'name'],
-        },
-      ],
-    });
-    return res.json(delivery);
   }
 
   async update(req, res) {
-    const { id } = req.params;
+    try {
+      const { id } = req.params;
 
-    const delivery = await Delivery.findByPk(id);
-
-    if (!delivery) {
-      return res.status(401).json({ error: 'Delivery not found.' });
-    }
-
-    const { deliveryman_id, recipient_id } = req.body;
-
-    if (deliveryman_id) {
-      const deliverymanExists = await Deliveryman.findOne({
-        where: { id: deliveryman_id },
+      const updatedDelivery = await DeliveryService.store({
+        id,
+        data: req.body,
       });
 
-      if (!deliverymanExists) {
-        return res.status(401).json({ error: 'Deliveryman not found.' });
-      }
+      return res.json(updatedDelivery);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    if (recipient_id) {
-      const recipientExists = await Recipient.findOne({
-        where: { id: recipient_id },
-      });
-
-      if (!recipientExists) {
-        return res.status(401).json({ error: 'Recipient not found.' });
-      }
-    }
-
-    const updatedDelivery = await delivery.update(req.body);
-
-    return res.json(updatedDelivery);
   }
 
   async delete(req, res) {
-    const { id } = req.params;
+    try {
+      const { id } = req.params;
 
-    const delivery = await Delivery.findByPk(id, {
-      include: [
-        {
-          model: File,
-          as: 'signature',
-          attributes: ['id', 'path', 'url'],
-        },
-      ],
-    });
+      await DeliveryService.delete(id);
 
-    if (!delivery) {
-      return res.status(401).json({ error: 'Delivery not found.' });
+      return res.status(204).send();
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    await delivery.destroy();
-
-    return res.status(204).send();
   }
 }
 

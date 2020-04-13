@@ -1,117 +1,54 @@
-import DeliveryProblem from '../models/DeliveryProblem';
-import Delivery from '../models/Delivery';
-import Deliveryman from '../models/Deliveryman';
+import DeliveryProblemService from '../services/DeliveryProblemService';
 
-import CancellationMail from '../jobs/CancellationMail';
-import Queue from '../../lib/Queue';
+const ERRO_INESPERADO = 'Erro inesperado.';
 
 class DeliveryProblemController {
   async store(req, res) {
-    const { id } = req.params;
+    try {
+      const { id } = req.params;
 
-    const deliveryExists = await Delivery.findByPk(id);
+      const { problem, delivery } = await DeliveryProblemService.store(
+        id,
+        req.body
+      );
 
-    if (!deliveryExists) {
-      return res.status(401).json({ error: 'Delivery not found.' });
+      return res.json({
+        problem,
+        delivery,
+      });
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    const { description } = req.body;
-
-    const problem = await DeliveryProblem.create({
-      delivery_id: id,
-      description,
-    });
-
-    return res.json({
-      problem,
-      delivery: deliveryExists,
-    });
   }
 
   async index(req, res) {
-    const { page = 1 } = req.query;
+    try {
+      const { page = 1 } = req.query;
 
-    const problems = await DeliveryProblem.findAll({
-      attributes: ['id', 'description', 'delivery_id'],
-      order: ['delivery_id'],
-      limit: 7,
-      offset: (page - 1) * 7,
-      include: [
-        {
-          model: Delivery,
-          as: 'delivery',
-          attributes: [
-            'id',
-            'product',
-            'deliveryman_id',
-            'recipient_id',
-            'canceled_at',
-          ],
-          where: {
-            canceled_at: null,
-          },
-        },
-      ],
-    });
+      const problems = await DeliveryProblemService.index(page);
 
-    return res.json(problems);
-  }
+      return res.json(problems);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
 
-  async show(req, res) {
-    const { id } = req.params;
-
-    const problems = await DeliveryProblem.findAll({
-      where: {
-        delivery_id: id,
-      },
-      attributes: ['id', 'description', 'created_at'],
-      include: [
-        {
-          model: Delivery,
-          as: 'delivery',
-          attributes: ['id', 'product', 'deliveryman_id', 'recipient_id'],
-        },
-      ],
-    });
-
-    return res.json(problems);
+      return res.status(500).json({ erro: ERRO_INESPERADO });
+    }
   }
 
   async delete(req, res) {
-    const { id } = req.params;
+    try {
+      const { id } = req.params;
 
-    const delivery = await Delivery.findByPk(id, {
-      include: [
-        {
-          model: Deliveryman,
-          as: 'deliveryman',
-          attributes: ['name', 'email'],
-        },
-      ],
-    });
+      const delivery = await DeliveryProblemService(id);
 
-    if (!delivery) {
-      return res.status(401).json({ error: 'Delivery not found' });
+      return res.json(delivery);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
     }
-
-    delivery.canceled_at = new Date();
-
-    await delivery.save();
-
-    const problems = await DeliveryProblem.findAll({
-      where: {
-        delivery_id: id,
-      },
-    });
-
-    if (process.env.NODE_ENV !== 'test') {
-      await Queue.add(CancellationMail.key, {
-        delivery,
-        problem: problems,
-      });
-    }
-
-    return res.json(delivery);
   }
 }
 
