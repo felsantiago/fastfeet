@@ -36,6 +36,25 @@ class DeliveryService {
     return delivery;
   }
 
+  async show(id) {
+    const delivery = await Delivery.findByPk(id, {
+      include: [
+        {
+          model: Deliveryman,
+          as: 'deliveryman',
+          attributes: ['id', 'name'],
+        },
+        {
+          model: Recipient,
+          as: 'recipient',
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
+
+    return delivery;
+  }
+
   async index(name, page) {
     const options = {};
 

@@ -21,6 +21,18 @@ class DeliverymanController {
     }
   }
 
+  async show(req, res) {
+    try {
+      const { id } = req.params;
+      const deliveryman = await DeliverymanService.show(id);
+      return res.json(deliveryman);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
+    }
+  }
+
   async index(req, res) {
     try {
       const { page, name } = req.query;

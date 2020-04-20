@@ -15,6 +15,18 @@ class DeliveryController {
     }
   }
 
+  async show(req, res) {
+    try {
+      const { id } = req.params;
+      const delivery = await DeliveryService.show(id);
+      return res.json(delivery);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
+    }
+  }
+
   async index(req, res) {
     try {
       const { page, name } = req.query;
@@ -35,7 +47,7 @@ class DeliveryController {
     try {
       const { id } = req.params;
 
-      const updatedDelivery = await DeliveryService.store({
+      const updatedDelivery = await DeliveryService.update({
         id,
         data: req.body,
       });

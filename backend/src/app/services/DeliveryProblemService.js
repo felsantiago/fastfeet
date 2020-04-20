@@ -7,8 +7,14 @@ import CancellationMail from '../jobs/CancellationMail';
 import Queue from '../../lib/Queue';
 
 class DeliveryProblemService {
-  async store(id, { data }) {
-    const deliveryExists = await Delivery.findByPk(id);
+  async store({ id, data }) {
+    const deliveryExists = await Delivery.findByPk(id, {
+      include: {
+        model: Deliveryman,
+        as: 'deliveryman',
+        attributes: ['id', 'name', 'email', 'avatar_id'],
+      },
+    });
 
     if (!deliveryExists) throw new BadRequestException('Delivery not found.');
 

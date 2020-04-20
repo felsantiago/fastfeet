@@ -19,6 +19,12 @@ class RecipientService {
     return recipient;
   }
 
+  async show(id) {
+    const recipient = await Recipient.findByPk(id);
+
+    return recipient;
+  }
+
   async index(name, page) {
     const options = {};
 

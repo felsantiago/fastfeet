@@ -30,6 +30,18 @@ class DeliverymanService {
     };
   }
 
+  async show(id) {
+    const deliveryman = await Deliveryman.findByPk(id, {
+      include: {
+        model: File,
+        as: 'avatar',
+        attributes: ['name', 'path', 'url'],
+      },
+    });
+
+    return deliveryman;
+  }
+
   async index(name, page) {
     const options = {};
 

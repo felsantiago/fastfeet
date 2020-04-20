@@ -1,4 +1,5 @@
 import DeliveryProblemService from '../services/DeliveryProblemService';
+import Notification from '../schemas/Notification';
 
 const ERRO_INESPERADO = 'Erro inesperado.';
 
@@ -7,10 +8,15 @@ class DeliveryProblemController {
     try {
       const { id } = req.params;
 
-      const { problem, delivery } = await DeliveryProblemService.store(
+      const { problem, delivery } = await DeliveryProblemService.store({
         id,
-        req.body
-      );
+        data: req.body,
+      });
+
+      await Notification.create({
+        content: `Novo problema na encomenda #${delivery.id} relatado pelo ${delivery.deliveryman.name}`,
+        user: req.userId,
+      });
 
       return res.json({
         problem,

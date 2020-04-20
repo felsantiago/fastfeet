@@ -5,7 +5,7 @@ import BadRequestException from '../exceptions/BadRequestException';
 class NotificationService {
   async index(id) {
     const checkIsProvider = await User.findOne({
-      where: { id, provider: true },
+      where: { id },
     });
 
     if (!checkIsProvider)

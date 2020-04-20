@@ -31,6 +31,18 @@ class RecipientController {
     }
   }
 
+  async show(req, res) {
+    try {
+      const { id } = req.params;
+      const recipient = await RecipientService.show(id);
+      return res.json(recipient);
+    } catch (err) {
+      if (err.erro) return res.status(err.code).json(err);
+
+      return res.status(500).json({ erro: ERRO_INESPERADO });
+    }
+  }
+
   async index(req, res) {
     try {
       const { page, name } = req.query;
