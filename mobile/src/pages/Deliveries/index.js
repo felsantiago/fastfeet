@@ -57,12 +57,16 @@ export default function Deliveries() {
       );
       setTotalPages(Math.ceil(data.count / 3));
     } catch (err) {
+      let response;
+      if (err.response.request)
+        response = JSON.parse(err.response.request.response);
+
       showMessage({
         message: 'Falha ao buscar encomendas',
         description: err.response
-          ? err.response.data.error
+          ? response.message
           : 'Erro de conexão com o servidor',
-        type: 'info',
+        type: 'danger',
       });
     } finally {
       setRefreshing(false);

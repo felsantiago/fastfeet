@@ -32,10 +32,14 @@ export default function NewProblem({ route }) {
 
       navigation.navigate('Details');
     } catch (err) {
+      let response;
+      if (err.response.request)
+        response = JSON.parse(err.response.request.response);
+
       showMessage({
         message: 'Falha ao criar o pedido',
         description: err.response
-          ? err.response.data.error
+          ? response.message
           : 'Erro de conexão com o servidor',
         type: 'danger',
       });

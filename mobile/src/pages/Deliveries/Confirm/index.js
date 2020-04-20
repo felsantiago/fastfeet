@@ -98,11 +98,14 @@ export default function Confirm({ route }) {
 
       navigation.navigate('Deliveries');
     } catch (err) {
-      console.tron.log(err);
+      let response;
+      if (err.response.request)
+        response = JSON.parse(err.response.request.response);
+
       showMessage({
         message: 'Falha ao confirmar entrega',
         description: err.response
-          ? err.response.data.error
+          ? response.message
           : 'Erro de conexão com o servidor',
         type: 'danger',
       });
