@@ -28,6 +28,24 @@ class DeliveryProblemService {
     return { problem, delivery: deliveryExists };
   }
 
+  async show(id) {
+    const problems = await DeliveryProblem.findAll({
+      where: {
+        delivery_id: id,
+      },
+      attributes: ['id', 'description', 'created_at'],
+      include: [
+        {
+          model: Delivery,
+          as: 'delivery',
+          attributes: ['id', 'product', 'deliveryman_id', 'recipient_id'],
+        },
+      ],
+    });
+
+    return problems;
+  }
+
   async index(page) {
     const problems = await DeliveryProblem.findAll({
       attributes: ['id', 'description', 'delivery_id'],

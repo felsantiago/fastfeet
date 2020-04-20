@@ -9,8 +9,7 @@ import FileController from './app/controllers/FileController';
 import DeliverymanController from './app/controllers/DeliverymanController';
 import DeliveryController from './app/controllers/DeliveryController';
 import StatusController from './app/controllers/StatusController';
-import DeliveryProblemsCtrller from './app/controllers/DeliveryProblemController';
-import NotificationController from './app/controllers/NotificationController';
+import DeliveryProblemsController from './app/controllers/DeliveryProblemController';
 
 import validateDeliveryStore from './app/validators/delivery/DeliveryStore';
 import validateDeliveryUpdate from './app/validators/delivery/DeliveryUpdate';
@@ -34,8 +33,6 @@ const upload = multer(multerConfig);
 routes.post('/users', validateUserStore, UserController.store);
 routes.post('/sessions', validateUserStore, SessionController.store);
 
-routes.use(authMiddleware);
-
 routes.get('/deliveryman/:id/deliveries', StatusController.index);
 routes.put(
   '/deliveryman/:id/deliveries/:deliveryId',
@@ -43,21 +40,23 @@ routes.put(
   StatusController.update
 );
 
-routes.post('/files', upload.single('file'), FileController.store);
-
-routes.get('/notifications', NotificationController.index);
-routes.put('/notifications/:id', NotificationController.update);
+routes.get('/delivery/:id/problems', DeliveryProblemsController.show);
 
 routes.post(
   '/delivery/:id/problems',
   validateProblemStore,
-  DeliveryProblemsCtrller.store
+  DeliveryProblemsController.store
 );
-routes.get('/delivery/problems', DeliveryProblemsCtrller.index);
+
+routes.post('/files', upload.single('file'), FileController.store);
+
+routes.use(authMiddleware);
+
+routes.get('/delivery/problems', DeliveryProblemsController.index);
 routes.delete(
   '/problem/:id/cancel-delivery',
   validateProblemDelete,
-  DeliveryProblemsCtrller.delete
+  DeliveryProblemsController.delete
 );
 
 routes.post('/recipients', validateRecipientStore, RecipientController.store);

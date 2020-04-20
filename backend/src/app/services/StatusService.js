@@ -24,12 +24,20 @@ class StatusService {
 
     const isDelivered = delivered === 'true';
 
-    options.where = {
-      end_date: {
-        [Op.not]: null,
-      },
-      deliveryman_id: id,
-    };
+    if (isDelivered) {
+      options.where = {
+        end_date: {
+          [Op.not]: null,
+        },
+        deliveryman_id: id,
+      };
+    } else {
+      options.where = {
+        deliveryman_id: id,
+        end_date: null,
+        canceled_at: null,
+      };
+    }
 
     options.order = [['created_at', 'ASC']];
     options.include = {
@@ -54,15 +62,9 @@ class StatusService {
 
     options.order = ['id'];
 
-    if (isDelivered) {
-      const { count, rows: deliveries } = await Delivery.findAndCountAll(
-        options
-      );
+    const { count, rows: deliveries } = await Delivery.findAndCountAll(options);
 
-      return { deliveries, deliverymanExists, count };
-    }
-
-    throw new BadRequestException('Delivery not provider.');
+    return { deliveries, deliverymanExists, count };
   }
 
   async update({ id, deliveryId, data }) {
